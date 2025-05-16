@@ -4,6 +4,7 @@ import './globals.css'
 import { Header } from './header'
 import { Footer } from './footer'
 import { ThemeProvider } from 'next-themes'
+import { cn } from '@/lib/utils'
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -43,6 +44,15 @@ export default function RootLayout({
           storageKey="theme"
           defaultTheme="system"
         >
+           <div
+        className={cn(
+          "-z-10",
+          "fixed inset-0",
+          "[background-size:20px_20px]",
+          "[background-image:radial-gradient(#d4d4d4_1px,transparent_1px)]",
+          "dark:[background-image:radial-gradient(#404040_1px,transparent_1px)]",
+        )}
+      />
           <div className="flex min-h-screen w-full flex-col font-[family-name:var(--font-inter-tight)]">
             <div className="relative mx-auto w-full max-w-screen-sm flex-1 px-4 pt-20">
               <Header />

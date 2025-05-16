@@ -6,7 +6,7 @@ import {
   useMotionValue,
   useSpring,
   type SpringOptions,
-} from 'motion/react'
+} from 'framer-motion'
 
 const SPRING_CONFIG = { stiffness: 26.7, damping: 4.1, mass: 0.2 }
 
@@ -36,39 +36,45 @@ export function Magnetic({
 
   useEffect(() => {
     const calculateDistance = (e: MouseEvent) => {
-      if (ref.current) {
-        const rect = ref.current.getBoundingClientRect()
-        const centerX = rect.left + rect.width / 2
-        const centerY = rect.top + rect.height / 2
-        const distanceX = e.clientX - centerX
-        const distanceY = e.clientY - centerY
+      if (!ref.current || !isHovered) return
 
-        const absoluteDistance = Math.sqrt(distanceX ** 2 + distanceY ** 2)
+      const rect = ref.current.getBoundingClientRect()
+      const centerX = rect.left + rect.width / 2
+      const centerY = rect.top + rect.height / 2
+      const distanceX = e.clientX - centerX
+      const distanceY = e.clientY - centerY
 
-        if (isHovered && absoluteDistance <= range) {
-          const scale = 1 - absoluteDistance / range
-          x.set(distanceX * intensity * scale)
-          y.set(distanceY * intensity * scale)
-        } else {
-          x.set(0)
-          y.set(0)
-        }
+      const absoluteDistance = Math.sqrt(distanceX ** 2 + distanceY ** 2)
+
+      if (absoluteDistance <= range) {
+        const scale = 1 - absoluteDistance / range
+        x.set(distanceX * intensity * scale)
+        y.set(distanceY * intensity * scale)
+      } else {
+        x.set(0)
+        y.set(0)
       }
     }
 
-    document.addEventListener('mousemove', calculateDistance)
+    if (isHovered) {
+      document.addEventListener('mousemove', calculateDistance)
+    }
 
     return () => {
       document.removeEventListener('mousemove', calculateDistance)
     }
-  }, [ref, isHovered, intensity, range])
+  }, [isHovered, intensity, range, x, y])
 
   useEffect(() => {
     if (actionArea === 'parent' && ref.current?.parentElement) {
       const parent = ref.current.parentElement
 
       const handleParentEnter = () => setIsHovered(true)
-      const handleParentLeave = () => setIsHovered(false)
+      const handleParentLeave = () => {
+        setIsHovered(false)
+        x.set(0)
+        y.set(0)
+      }
 
       parent.addEventListener('mouseenter', handleParentEnter)
       parent.addEventListener('mouseleave', handleParentLeave)
@@ -80,7 +86,7 @@ export function Magnetic({
     } else if (actionArea === 'global') {
       setIsHovered(true)
     }
-  }, [actionArea])
+  }, [actionArea, x, y])
 
   const handleMouseEnter = () => {
     if (actionArea === 'self') {
@@ -99,11 +105,12 @@ export function Magnetic({
   return (
     <motion.div
       ref={ref}
-      onMouseEnter={actionArea === 'self' ? handleMouseEnter : undefined}
-      onMouseLeave={actionArea === 'self' ? handleMouseLeave : undefined}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
       style={{
         x: springX,
         y: springY,
+        display: 'inline-block',
       }}
     >
       {children}
